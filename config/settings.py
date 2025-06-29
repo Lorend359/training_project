@@ -11,22 +11,31 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+# Initialize environment variables
+env = environ.Env(
+    DEBUG=(bool, False)
+)
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-db$21&h!tl4im$4%gzccgju@hd%ka5=q_r(@@&=i8%)zg(r7t4"
+SECRET_KEY = env("SECRET_KEY", default="unsafe-secret")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool("DEBUG", default=True)
 
-ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
 
 # Application definition
@@ -79,13 +88,14 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'lms_db'),
-        'USER': os.getenv('POSTGRES_USER', 'lms_user'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'lms_pass'),
-        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
-        'PORT': os.getenv('POSTGRES_PORT', '5432'),
+        'NAME': env('POSTGRES_DB', default='lms_db'),
+        'USER': env('POSTGRES_USER', default='lms_user'),
+        'PASSWORD': env('POSTGRES_PASSWORD', default='lms_pass'),
+        'HOST': env('POSTGRES_HOST', default='localhost'),
+        'PORT': env('POSTGRES_PORT', default='5432'),
     }
 }
+
 
 
 # Password validation
