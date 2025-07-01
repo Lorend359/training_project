@@ -14,7 +14,7 @@ class Assessment(models.Model):
         related_name="assessment",
         verbose_name="Урок"
     )
-    title = models.CharField(max_length=255, verbose_name="Название оценки")
+    title = models.CharField(max_length=255, verbose_name="Название теста")
 
     def __str__(self):
         return f"Assessment for: {self.lesson.title}"
