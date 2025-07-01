@@ -1,7 +1,8 @@
+from rest_framework import generics, permissions
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from .models import Assessment, Question, AnswerOption
-from .serializers import AssessmentSerializer, QuestionSerializer, AnswerOptionSerializer
+from .serializers import AssessmentSerializer, QuestionSerializer, AnswerOptionSerializer, UserAnswerSerializer
 
 
 class AssessmentViewSet(viewsets.ModelViewSet):
@@ -29,3 +30,11 @@ class AnswerOptionViewSet(viewsets.ModelViewSet):
     queryset = AnswerOption.objects.all()
     serializer_class = AnswerOptionSerializer
     permission_classes = [IsAuthenticated]
+
+
+class SubmitAnswerAPIView(generics.CreateAPIView):
+    """
+    Эндпоинт для отправки ответа пользователя на вопрос.
+    """
+    serializer_class = UserAnswerSerializer
+    permission_classes = [permissions.IsAuthenticated]

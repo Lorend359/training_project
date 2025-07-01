@@ -1,13 +1,13 @@
 from django.db import models
+from config import settings
 
 
 class Assessment(models.Model):
     """
     Модель оценки знаний (тестирования), привязанная к конкретному уроку.
     Один Assessment может включать в себя несколько вопросов (Question).
-    Каждый урок может иметь не более одного Assessment.
+    Один урок может иметь не более одного Assessment.
     """
-
     lesson = models.OneToOneField(
         "courses.Lesson",
         on_delete=models.CASCADE,
@@ -23,9 +23,8 @@ class Assessment(models.Model):
 class Question(models.Model):
     """
     Модель вопроса, входящего в Assessment.
-    Вопрос содержит текст и связан с несколькими вариантами ответа (AnswerOption).
+    Каждый вопрос содержит текст и привязан к одной оценке.
     """
-
     assessment = models.ForeignKey(
         Assessment,
         on_delete=models.CASCADE,
@@ -40,11 +39,9 @@ class Question(models.Model):
 
 class AnswerOption(models.Model):
     """
-    Модель варианта ответа для вопроса.
-    Каждый вариант принадлежит одному вопросу.
-    Поле is_correct указывает, является ли этот ответ правильным.
+    Модель варианта ответа на вопрос.
+    Связан с вопросом, может быть правильным или неправильным.
     """
-
     question = models.ForeignKey(
         Question,
         on_delete=models.CASCADE,
@@ -56,6 +53,37 @@ class AnswerOption(models.Model):
 
     def __str__(self):
         return f"{self.text} ({'✔' if self.is_correct else '✘'})"
+
+
+class UserAnswer(models.Model):
+    """
+    Ответ пользователя на конкретный вопрос.
+    Позволяет отслеживать попытки и правильность ответов.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="answers",
+        verbose_name="Пользователь"
+    )
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE,
+        related_name="user_answers",
+        verbose_name="Вопрос"
+    )
+    selected_option = models.ForeignKey(
+        AnswerOption,
+        on_delete=models.CASCADE,
+        related_name="user_selections",
+        verbose_name="Выбранный вариант"
+    )
+    is_correct = models.BooleanField(default=False, verbose_name="Правильность")
+    answered_at = models.DateTimeField(auto_now_add=True)
+    attempt_number = models.PositiveIntegerField(default=1, verbose_name="Номер попытки")
+
+    def __str__(self):
+        return f"{self.user.email} — {self.question.text} — попытка {self.attempt_number} — {'✔' if self.is_correct else '✘'}"
 
 # --- Assessment ---
 # Привязан к уроку через OneToOneField, т.е. один урок — один тест.
