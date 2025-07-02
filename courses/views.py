@@ -33,7 +33,6 @@ class CourseViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.request.method in SAFE_METHODS:
             return [IsAuthenticated()]
-        # На любые действия кроме чтения — требуется и роль (админ/преподаватель), и владение объектом/админство
         return [IsAuthenticated(), IsAdminOrTeacher(), IsOwnerOrAdmin()]
 
     def perform_create(self, serializer):

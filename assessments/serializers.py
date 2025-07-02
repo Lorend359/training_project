@@ -67,11 +67,9 @@ class UserAnswerSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         question = attrs["question"]
 
-        # Получаем все попытки пользователя
         previous_attempts = UserAnswer.objects.filter(user=user, question=question).order_by("answered_at")
 
         if previous_attempts.exists():
-            # Проверяем, был ли уже правильный ответ
             if previous_attempts.filter(is_correct=True).exists():
                 raise serializers.ValidationError("Вы уже правильно ответили на этот вопрос.")
             if previous_attempts.count() >= 3:
@@ -84,15 +82,8 @@ class UserAnswerSerializer(serializers.ModelSerializer):
         validated_data["is_correct"] = selected_option.is_correct
         validated_data["user"] = self.context["request"].user
 
-        # Номер попытки = кол-во предыдущих + 1
         validated_data["attempt_number"] = (
             UserAnswer.objects.filter(user=validated_data["user"], question=validated_data["question"]).count() + 1
         )
 
         return super().create(validated_data)
-
-
-# AssessmentSerializer включает все Question, а те в свою очередь — AnswerOption.
-#
-# Все вложенные поля только на чтение (пока) —
-# мы не делаем массовое создание внутри, CRUD будет отдельно через ViewSet'ы.

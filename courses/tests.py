@@ -10,20 +10,16 @@ from courses.models import Course, Lesson
 from courses.permissions import IsAdminOrTeacher
 from users.models import CustomUser
 
-# --- Unit-тесты permission-класса ---
-
 
 class IsAdminOrTeacherPermissionTest(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-        # Пользователи
         self.admin = CustomUser.objects.create_user(
             email="admin@test.com", full_name="Admin", password="pass", is_staff=True
         )
         self.teacher = CustomUser.objects.create_user(email="teacher@test.com", full_name="Teacher", password="pass")
         self.student = CustomUser.objects.create_user(email="student@test.com", full_name="Student", password="pass")
 
-        # Создаём группы через constants (без присваивания переменных)
         Group.objects.create(name=ADMINS_GROUP)
         teacher_group = Group.objects.create(name=TEACHERS_GROUP)
         student_group = Group.objects.create(name=STUDENTS_GROUP)
@@ -52,9 +48,6 @@ class IsAdminOrTeacherPermissionTest(TestCase):
         request = self.factory.get("/")
         request.user = type("Anon", (), {"is_authenticated": False})()
         self.assertFalse(self.permission.has_permission(request, None))
-
-
-# --- Базовые smoke-тесты (список, просмотр, запрет на создание для не-преподавателей) ---
 
 
 class CoursesTests(APITestCase):
@@ -119,9 +112,6 @@ class LessonsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-# --- Дополнительные тесты прав на владение и редактирование ---
-
-
 class CoursePermissionsTestCase(APITestCase):
     def setUp(self):
         call_command("init_groups", verbosity=0)
@@ -134,12 +124,10 @@ class CoursePermissionsTestCase(APITestCase):
         self.student = CustomUser.objects.create_user(
             email="stud@example.com", full_name="Student", password="pass123"
         )
-        # Назначение групп
         self.teacher1.groups.add(Group.objects.get(name=TEACHERS_GROUP))
         self.teacher2.groups.add(Group.objects.get(name=TEACHERS_GROUP))
         self.student.groups.add(Group.objects.get(name=STUDENTS_GROUP))
 
-        # Курс и урок
         self.course = Course.objects.create(title="Test Course", owner=self.teacher1, description="desc")
         self.lesson = Lesson.objects.create(
             course=self.course, title="Test Lesson", content="...", order=1, owner=self.teacher1

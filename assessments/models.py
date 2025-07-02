@@ -83,5 +83,7 @@ class UserAnswer(models.Model):
         ]
 
     def __str__(self):
-        return (f"{self.user.email} — {self.question.text} — "
-                f"попытка {self.attempt_number} — {'✔' if self.is_correct else '✘'}")
+        return (
+            f"{self.user.email} — {self.question.text} — "
+            f"попытка {self.attempt_number} — {'✔' if self.is_correct else '✘'}"
+        )

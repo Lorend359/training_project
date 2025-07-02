@@ -14,11 +14,9 @@ class IsCourseOwnerOrPrivileged(BasePermission):
         if not user or not user.is_authenticated:
             return False
 
-        # Разрешить чтение всем аутентифицированным
         if request.method in SAFE_METHODS:
             return True
 
-        # Универсальный способ добраться до owner курса
         owner = None
 
         if hasattr(obj, "lesson") and hasattr(obj.lesson, "course"):

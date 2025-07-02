@@ -11,14 +11,12 @@ class Command(BaseCommand):
     help = "Создаёт группы пользователей и назначает базовые права."
 
     def handle(self, *args, **kwargs):
-        # --- Группы ---
         admin_group, _ = Group.objects.get_or_create(name=ADMINS_GROUP)
         teacher_group, _ = Group.objects.get_or_create(name=TEACHERS_GROUP)
         student_group, _ = Group.objects.get_or_create(name=STUDENTS_GROUP)
 
         self.stdout.write(self.style.SUCCESS("✅ Группы созданы или обновлены."))
 
-        # --- Права преподавателя ---
         teacher_permissions = []
 
         for model in [Course, Lesson, Assessment, Question, AnswerOption]:
@@ -33,7 +31,6 @@ class Command(BaseCommand):
         teacher_group.permissions.set(teacher_permissions)
         self.stdout.write(self.style.SUCCESS("✅ Права преподавателя назначены."))
 
-        # --- Права студента (только просмотр и добавление ответов) ---
         student_permissions = []
 
         for model in [Course, Lesson, Assessment, Question, AnswerOption]:

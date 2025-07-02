@@ -26,7 +26,7 @@ class UserRegistrationView(APIView):
     """
 
     permission_classes = [AllowAny]
-    serializer_class = UserRegistrationSerializer  # для drf-spectacular
+    serializer_class = UserRegistrationSerializer
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)

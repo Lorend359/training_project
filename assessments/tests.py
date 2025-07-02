@@ -7,17 +7,15 @@ from rest_framework.test import APITestCase
 from assessments import services
 from assessments.models import AnswerOption, Assessment, Question
 from assessments.permissions import IsCourseOwnerOrPrivileged
-from core.constants import ADMINS_GROUP, TEACHERS_GROUP
-from courses.models import Course, Lesson
-from users.models import CustomUser
 from assessments.serializers import (
     AnswerOptionSerializer,
     AssessmentSerializer,
     QuestionSerializer,
     UserAnswerSerializer,
 )
-
-# --- 1. UNIT-ТЕСТЫ PERMISSIONS ---
+from core.constants import ADMINS_GROUP, TEACHERS_GROUP
+from courses.models import Course, Lesson
+from users.models import CustomUser
 
 
 class IsCourseOwnerOrPrivilegedTest(TestCase):
@@ -80,14 +78,10 @@ class IsCourseOwnerOrPrivilegedTest(TestCase):
 
     def test_permission_not_authenticated(self):
         obj = type("Fake", (), {"lesson": self.lesson})()
-        # Мокаем анонимного пользователя с нужным атрибутом
         anon = type("Anon", (), {"is_authenticated": False})()
         req = self.factory.get("/")
         req.user = anon
         self.assertFalse(self.permission.has_object_permission(req, None, obj))
-
-
-# --- 2. UNIT-ТЕСТЫ SERVICES ---
 
 
 class ServicesTestCase(TestCase):
@@ -123,9 +117,6 @@ class ServicesTestCase(TestCase):
             services.submit_user_answer(self.user, self.question, self.opt2)
 
 
-# --- 3. UNIT-ТЕСТЫ SERIALIZERS ---
-
-
 class AssessmentSerializerTest(TestCase):
     def setUp(self):
         self.user = CustomUser.objects.create_user(email="test@x.com", full_name="User", password="pass")
@@ -147,9 +138,7 @@ class AssessmentSerializerTest(TestCase):
 
     def test_answer_option_serializer_fields(self):
         ser = AnswerOptionSerializer(instance=self.option)
-        # Чекаем только существующие поля!
         self.assertEqual(ser.data["text"], "1")
-        # Только если question есть в fields
         if "question" in ser.data:
             self.assertEqual(ser.data["question"], self.question.id)
 
@@ -158,9 +147,6 @@ class AssessmentSerializerTest(TestCase):
         fake_request = type("Req", (), {"user": self.user})()
         ser = UserAnswerSerializer(data=data, context={"request": fake_request})
         self.assertTrue(ser.is_valid(), ser.errors)
-
-
-# --- 4. API-ТЕСТЫ ---
 
 
 class AssessmentTests(APITestCase):
@@ -219,7 +205,6 @@ class AssessmentTests(APITestCase):
         self.assertIn("превышено количество попыток", str(response.data).lower())
 
     def test_fourth_attempt_raises_value_error(self):
-        # Прямой вызов сервиса — проверяем логику ограничения попыток
         for _ in range(3):
             services.submit_user_answer(self.teacher, self.question, self.option_wrong)
         with self.assertRaises(ValueError) as exc:

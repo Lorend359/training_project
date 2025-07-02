@@ -24,16 +24,13 @@ class UserRegistrationTestCase(APITestCase):
     def test_register_user_missing_field(self):
         data = {
             "email": "test2@example.com",
-            # full_name is missing
             "password": "12345678",
         }
         response = self.client.post(self.register_url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_get_token_success(self):
-        CustomUser.objects.create_user(
-            email="tokenuser@example.com", full_name="Token User", password="tokenpass123"
-        )
+        CustomUser.objects.create_user(email="tokenuser@example.com", full_name="Token User", password="tokenpass123")
         response = self.client.post(self.token_url, {"email": "tokenuser@example.com", "password": "tokenpass123"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.data)

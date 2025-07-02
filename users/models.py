@@ -55,16 +55,3 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
-
-
-# Файл: users/models.py
-# Комментарии:
-
-# Используем AbstractBaseUser + PermissionsMixin, т.к. хотим:
-# - заменить username на email
-# - добавить поле ФИО (обязательно для преподавателей)
-# - оставить возможность логиниться через email
-# - управлять правами (через PermissionsMixin)
-
-# UserManager нужен для правильного создания пользователя и суперпользователя
-# (иначе команда createsuperuser работать не будет)
