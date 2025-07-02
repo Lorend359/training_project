@@ -4,8 +4,7 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse
 
 from .models import Course, Lesson
 from .serializers import CourseSerializer, LessonSerializer
-from .permissions import IsAdminOrTeacher
-from core.constants import TEACHERS_GROUP
+from .permissions import IsAdminOrTeacher, IsOwnerOrAdmin
 
 
 @extend_schema(
@@ -29,15 +28,13 @@ class CourseViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user.is_authenticated:
             return Course.objects.none()
-        qs = Course.objects.all().select_related("owner").prefetch_related("lessons")
-        if user.groups.filter(name=TEACHERS_GROUP).exists() and not user.is_staff:
-            qs = qs.filter(owner=user)
-        return qs
+        return Course.objects.all().select_related("owner").prefetch_related("lessons")
 
     def get_permissions(self):
         if self.request.method in SAFE_METHODS:
             return [IsAuthenticated()]
-        return [IsAuthenticated(), IsAdminOrTeacher()]
+        # На любые действия кроме чтения — требуется и роль (админ/преподаватель), и владение объектом/админство
+        return [IsAuthenticated(), IsAdminOrTeacher(), IsOwnerOrAdmin()]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -62,15 +59,12 @@ class LessonViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user.is_authenticated:
             return Lesson.objects.none()
-        qs = Lesson.objects.all().select_related("course__owner")
-        if user.groups.filter(name=TEACHERS_GROUP).exists() and not user.is_staff:
-            qs = qs.filter(course__owner=user)
-        return qs
+        return Lesson.objects.all().select_related("course__owner")
 
     def get_permissions(self):
         if self.request.method in SAFE_METHODS:
             return [IsAuthenticated()]
-        return [IsAuthenticated(), IsAdminOrTeacher()]
+        return [IsAuthenticated(), IsAdminOrTeacher(), IsOwnerOrAdmin()]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
