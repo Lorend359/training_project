@@ -39,8 +39,17 @@ class Lesson(models.Model):
     )
     order = models.PositiveIntegerField(default=0, verbose_name="Порядок")
 
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="lessons",
+        verbose_name="Автор урока",
+        null=True
+    )
+
     def __str__(self):
         return f"{self.title} ({self.course.title})"
+
 
 # Модель Course содержит основную информацию о курсе: название, описание, и владельца-преподавателя.
 # Модель Lesson реализует материалы для курса.

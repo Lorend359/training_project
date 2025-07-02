@@ -11,9 +11,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # --- Группы ---
-        admin_group, _ = Group.objects.get_or_create(name="Administrators")
-        teacher_group, _ = Group.objects.get_or_create(name="Teachers")
-        student_group, _ = Group.objects.get_or_create(name="Students")
+        admin_group, _ = Group.objects.get_or_create(name="Администраторы")
+        teacher_group, _ = Group.objects.get_or_create(name="Преподаватели")
+        student_group, _ = Group.objects.get_or_create(name="Студенты")
 
         self.stdout.write(self.style.SUCCESS("✅ Группы созданы или обновлены."))
 
