@@ -79,24 +79,21 @@ class UserAnswer(models.Model):
         verbose_name="Выбранный вариант"
     )
     is_correct = models.BooleanField(default=False, verbose_name="Правильность")
-    answered_at = models.DateTimeField(auto_now_add=True)
+    answered_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата ответа")
     attempt_number = models.PositiveIntegerField(default=1, verbose_name="Номер попытки")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "question", "attempt_number"],
+                name="unique_attempt_per_number",
+            ),
+            models.UniqueConstraint(
+                fields=["user", "question"],
+                condition=models.Q(is_correct=True),
+                name="unique_correct_answer",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.user.email} — {self.question.text} — попытка {self.attempt_number} — {'✔' if self.is_correct else '✘'}"
-
-# --- Assessment ---
-# Привязан к уроку через OneToOneField, т.е. один урок — один тест.
-# Это гарантирует, что для каждого урока может быть не более одной связанной оценки.
-# Поле title позволяет задать краткое имя для самого теста (например, "Итоговый тест").
-
-# --- Question ---
-# Каждый вопрос связан с одной оценкой (assessment).
-# Один тест может включать в себя несколько вопросов.
-# Используем CharField (а не TextField), так как вопрос обычно короткий.
-
-# --- AnswerOption ---
-# Привязан к вопросу: один вопрос — много вариантов ответов.
-# Поле is_correct помогает реализовать автоматическую проверку теста:
-# на его основе можно потом сравнивать ответы пользователя.
-# Если нужно будет поддерживать несколько правильных ответов — логика готова.

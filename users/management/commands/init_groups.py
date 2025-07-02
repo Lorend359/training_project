@@ -1,9 +1,11 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+
 from courses.models import Course, Lesson
 from assessments.models import Assessment, Question, AnswerOption, UserAnswer
 from users.models import CustomUser
+from core.constants import ADMINS_GROUP, TEACHERS_GROUP, STUDENTS_GROUP
 
 
 class Command(BaseCommand):
@@ -11,9 +13,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # --- Группы ---
-        admin_group, _ = Group.objects.get_or_create(name="Администраторы")
-        teacher_group, _ = Group.objects.get_or_create(name="Преподаватели")
-        student_group, _ = Group.objects.get_or_create(name="Студенты")
+        admin_group, _ = Group.objects.get_or_create(name=ADMINS_GROUP)
+        teacher_group, _ = Group.objects.get_or_create(name=TEACHERS_GROUP)
+        student_group, _ = Group.objects.get_or_create(name=STUDENTS_GROUP)
 
         self.stdout.write(self.style.SUCCESS("✅ Группы созданы или обновлены."))
 
@@ -23,22 +25,26 @@ class Command(BaseCommand):
         for model in [Course, Lesson, Assessment, Question, AnswerOption]:
             content_type = ContentType.objects.get_for_model(model)
             for codename in ["add", "change", "delete", "view"]:
-                perm = Permission.objects.get(codename=f"{codename}_{model._meta.model_name}", content_type=content_type)
+                perm = Permission.objects.get(
+                    codename=f"{codename}_{model._meta.model_name}",
+                    content_type=content_type,
+                )
                 teacher_permissions.append(perm)
 
         teacher_group.permissions.set(teacher_permissions)
         self.stdout.write(self.style.SUCCESS("✅ Права преподавателя назначены."))
 
-        # --- Права студента (только view + add useranswer) ---
+        # --- Права студента (только просмотр и добавление ответов) ---
         student_permissions = []
 
-        # Разрешить только просмотр моделей
         for model in [Course, Lesson, Assessment, Question, AnswerOption]:
             content_type = ContentType.objects.get_for_model(model)
-            view_perm = Permission.objects.get(codename=f"view_{model._meta.model_name}", content_type=content_type)
+            view_perm = Permission.objects.get(
+                codename=f"view_{model._meta.model_name}",
+                content_type=content_type,
+            )
             student_permissions.append(view_perm)
 
-        # Разрешить создавать UserAnswer (ответы)
         ua_ct = ContentType.objects.get_for_model(UserAnswer)
         student_permissions.append(Permission.objects.get(codename="add_useranswer", content_type=ua_ct))
         student_permissions.append(Permission.objects.get(codename="view_useranswer", content_type=ua_ct))

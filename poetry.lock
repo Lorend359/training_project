@@ -233,6 +233,20 @@ docs = ["furo (>=2024.8.6)", "sphinx (>=5.0)", "sphinx-notfound-page"]
 testing = ["coverage[toml] (>=5.0a4)", "pytest (>=4.6.11)", "setuptools (>=71.0.0)"]
 
 [[package]]
+name = "django-filter"
+version = "25.1"
+description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "django_filter-25.1-py3-none-any.whl", hash = "sha256:4fa48677cf5857b9b1347fed23e355ea792464e0fe07244d1fdfb8a806215b80"},
+    {file = "django_filter-25.1.tar.gz", hash = "sha256:1ec9eef48fa8da1c0ac9b411744b16c3f4c31176c867886e4c48da369c407153"},
+]
+
+[package.dependencies]
+Django = ">=4.2"
+
+[[package]]
 name = "djangorestframework"
 version = "3.16.0"
 description = "Web APIs for Django, made easy."
@@ -308,17 +322,6 @@ files = [
 mccabe = ">=0.7.0,<0.8.0"
 pycodestyle = ">=2.14.0,<2.15.0"
 pyflakes = ">=3.4.0,<3.5.0"
-
-[[package]]
-name = "generics"
-version = "7.0.0"
-description = "A classy toolkit designed with OOP in mind."
-optional = false
-python-versions = "*"
-files = [
-    {file = "generics-7.0.0-py2.py3-none-any.whl", hash = "sha256:ab22c13f2adf4d65402ca448494c9561b762e56316971f6528eada6a82e16619"},
-    {file = "generics-7.0.0.tar.gz", hash = "sha256:abd5c0fe619f02ee3340bf4b29f90dce9bd7bea88b3e4a369c8c2563014eab9c"},
-]
 
 [[package]]
 name = "inflection"
@@ -944,4 +947,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "f336711e8ebf902d29e5771cee5c9aca06bd2b41a2963f7fe0feea43a11f9a20"
+content-hash = "bcee5e824797c59f372271d3d07b83c2cd5ab9bd0198591a4210bcd20da6b856"

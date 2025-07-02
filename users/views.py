@@ -1,8 +1,9 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.permissions import AllowAny
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+
 from .serializers import UserRegistrationSerializer
 
 
@@ -13,7 +14,7 @@ from .serializers import UserRegistrationSerializer
     request=UserRegistrationSerializer,
     responses={
         201: OpenApiResponse(
-            response=None,
+            response=UserRegistrationSerializer,
             description="Успешная регистрация. Возвращает email и ФИО."
         ),
         400: OpenApiResponse(description="Ошибка валидации данных"),
@@ -21,13 +22,14 @@ from .serializers import UserRegistrationSerializer
 )
 class UserRegistrationView(APIView):
     """
-    View для регистрации нового пользователя.
-    Возвращает email и ФИО после успешного создания.
+    Регистрация нового пользователя.
+    Возвращает email и полное имя при успешном создании.
     """
     permission_classes = [AllowAny]
+    serializer_class = UserRegistrationSerializer  # для drf-spectacular
 
     def post(self, request):
-        serializer = UserRegistrationSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             return Response(
