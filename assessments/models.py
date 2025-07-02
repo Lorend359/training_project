@@ -1,4 +1,5 @@
 from django.db import models
+
 from config import settings
 
 
@@ -8,11 +9,9 @@ class Assessment(models.Model):
     Один Assessment может включать в себя несколько вопросов (Question).
     Один урок может иметь не более одного Assessment.
     """
+
     lesson = models.OneToOneField(
-        "courses.Lesson",
-        on_delete=models.CASCADE,
-        related_name="assessment",
-        verbose_name="Урок"
+        "courses.Lesson", on_delete=models.CASCADE, related_name="assessment", verbose_name="Урок"
     )
     title = models.CharField(max_length=255, verbose_name="Название теста")
 
@@ -25,11 +24,9 @@ class Question(models.Model):
     Модель вопроса, входящего в Assessment.
     Каждый вопрос содержит текст и привязан к одной оценке.
     """
+
     assessment = models.ForeignKey(
-        Assessment,
-        on_delete=models.CASCADE,
-        related_name="questions",
-        verbose_name="Оценка"
+        Assessment, on_delete=models.CASCADE, related_name="questions", verbose_name="Оценка"
     )
     text = models.CharField(max_length=1024, verbose_name="Текст вопроса")
 
@@ -42,11 +39,9 @@ class AnswerOption(models.Model):
     Модель варианта ответа на вопрос.
     Связан с вопросом, может быть правильным или неправильным.
     """
+
     question = models.ForeignKey(
-        Question,
-        on_delete=models.CASCADE,
-        related_name="answer_options",
-        verbose_name="Вопрос"
+        Question, on_delete=models.CASCADE, related_name="answer_options", verbose_name="Вопрос"
     )
     text = models.CharField(max_length=512, verbose_name="Текст ответа")
     is_correct = models.BooleanField(default=False, verbose_name="Правильный ответ")
@@ -60,23 +55,15 @@ class UserAnswer(models.Model):
     Ответ пользователя на конкретный вопрос.
     Позволяет отслеживать попытки и правильность ответов.
     """
+
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="answers",
-        verbose_name="Пользователь"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="answers", verbose_name="Пользователь"
     )
     question = models.ForeignKey(
-        Question,
-        on_delete=models.CASCADE,
-        related_name="user_answers",
-        verbose_name="Вопрос"
+        Question, on_delete=models.CASCADE, related_name="user_answers", verbose_name="Вопрос"
     )
     selected_option = models.ForeignKey(
-        AnswerOption,
-        on_delete=models.CASCADE,
-        related_name="user_selections",
-        verbose_name="Выбранный вариант"
+        AnswerOption, on_delete=models.CASCADE, related_name="user_selections", verbose_name="Выбранный вариант"
     )
     is_correct = models.BooleanField(default=False, verbose_name="Правильность")
     answered_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата ответа")
@@ -96,4 +83,5 @@ class UserAnswer(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.user.email} — {self.question.text} — попытка {self.attempt_number} — {'✔' if self.is_correct else '✘'}"
+        return (f"{self.user.email} — {self.question.text} — "
+                f"попытка {self.attempt_number} — {'✔' if self.is_correct else '✘'}")

@@ -1,19 +1,18 @@
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import generics, permissions, viewsets
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from drf_spectacular.utils import extend_schema, OpenApiResponse
-
-from .models import Assessment, Question, AnswerOption
+from . import services
+from .models import AnswerOption, Assessment, Question
 from .permissions import IsCourseOwnerOrPrivileged
 from .serializers import (
+    AnswerOptionSerializer,
     AssessmentSerializer,
     QuestionSerializer,
-    AnswerOptionSerializer,
     UserAnswerSerializer,
 )
-from . import services
 
 
 @extend_schema(
@@ -23,18 +22,14 @@ from . import services
     responses={
         200: AssessmentSerializer,
         403: OpenApiResponse(description="Недостаточно прав"),
-    }
+    },
 )
 class AssessmentViewSet(viewsets.ModelViewSet):
     serializer_class = AssessmentSerializer
     permission_classes = [IsAuthenticated, IsCourseOwnerOrPrivileged]
 
     def get_queryset(self):
-        return (
-            Assessment.objects
-            .select_related("lesson__course__owner")
-            .prefetch_related("questions__answer_options")
-        )
+        return Assessment.objects.select_related("lesson__course__owner").prefetch_related("questions__answer_options")
 
     def perform_create(self, serializer):
         lesson = serializer.validated_data["lesson"]
@@ -54,18 +49,14 @@ class AssessmentViewSet(viewsets.ModelViewSet):
     responses={
         200: QuestionSerializer,
         403: OpenApiResponse(description="Недостаточно прав"),
-    }
+    },
 )
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = QuestionSerializer
     permission_classes = [IsAuthenticated, IsCourseOwnerOrPrivileged]
 
     def get_queryset(self):
-        return (
-            Question.objects
-            .select_related("assessment__lesson__course__owner")
-            .prefetch_related("answer_options")
-        )
+        return Question.objects.select_related("assessment__lesson__course__owner").prefetch_related("answer_options")
 
     def perform_create(self, serializer):
         assessment = serializer.validated_data["assessment"]
@@ -85,17 +76,14 @@ class QuestionViewSet(viewsets.ModelViewSet):
     responses={
         200: AnswerOptionSerializer,
         403: OpenApiResponse(description="Недостаточно прав"),
-    }
+    },
 )
 class AnswerOptionViewSet(viewsets.ModelViewSet):
     serializer_class = AnswerOptionSerializer
     permission_classes = [IsAuthenticated, IsCourseOwnerOrPrivileged]
 
     def get_queryset(self):
-        return (
-            AnswerOption.objects
-            .select_related("question__assessment__lesson__course__owner")
-        )
+        return AnswerOption.objects.select_related("question__assessment__lesson__course__owner")
 
     def perform_create(self, serializer):
         question = serializer.validated_data["question"]
@@ -112,15 +100,16 @@ class AnswerOptionViewSet(viewsets.ModelViewSet):
     tags=["Ответы студентов"],
     summary="Отправка ответа на вопрос",
     description=(
-        "Позволяет студенту отправить ответ на вопрос теста. "
-        "Проверяется правильность и количество попыток."
+        "Позволяет студенту отправить ответ на вопрос теста. " "Проверяется правильность и количество попыток."
     ),
     request=UserAnswerSerializer,
     responses={
         201: UserAnswerSerializer,
-        400: OpenApiResponse(description="Ошибка валидации — превышено количество попыток или уже есть правильный ответ."),
+        400: OpenApiResponse(
+            description="Ошибка валидации — превышено количество попыток или уже есть правильный ответ."
+        ),
         403: OpenApiResponse(description="Неавторизованный пользователь."),
-    }
+    },
 )
 class SubmitAnswerAPIView(generics.GenericAPIView):
     serializer_class = UserAnswerSerializer

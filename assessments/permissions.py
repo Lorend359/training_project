@@ -1,5 +1,7 @@
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.permissions import SAFE_METHODS, BasePermission
+
 from core.constants import ADMINS_GROUP
+
 
 class IsCourseOwnerOrPrivileged(BasePermission):
     """
@@ -21,9 +23,18 @@ class IsCourseOwnerOrPrivileged(BasePermission):
 
         if hasattr(obj, "lesson") and hasattr(obj.lesson, "course"):
             owner = obj.lesson.course.owner
-        elif hasattr(obj, "assessment") and hasattr(obj.assessment, "lesson") and hasattr(obj.assessment.lesson, "course"):
+        elif (
+            hasattr(obj, "assessment")
+            and hasattr(obj.assessment, "lesson")
+            and hasattr(obj.assessment.lesson, "course")
+        ):
             owner = obj.assessment.lesson.course.owner
-        elif hasattr(obj, "question") and hasattr(obj.question, "assessment") and hasattr(obj.question.assessment, "lesson") and hasattr(obj.question.assessment.lesson, "course"):
+        elif (
+            hasattr(obj, "question")
+            and hasattr(obj.question, "assessment")
+            and hasattr(obj.question.assessment, "lesson")
+            and hasattr(obj.question.assessment.lesson, "course")
+        ):
             owner = obj.question.assessment.lesson.course.owner
         elif hasattr(obj, "course") and hasattr(obj.course, "owner"):
             owner = obj.course.owner

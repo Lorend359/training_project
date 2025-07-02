@@ -1,27 +1,30 @@
-from django.test import TestCase, RequestFactory
-from rest_framework.test import APITestCase, APIClient
-from rest_framework import status
-from django.urls import reverse
-from django.core.management import call_command
 from django.contrib.auth.models import Group
+from django.core.management import call_command
+from django.test import RequestFactory, TestCase
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APIClient, APITestCase
 
-from users.models import CustomUser
+from core.constants import ADMINS_GROUP, STUDENTS_GROUP, TEACHERS_GROUP
 from courses.models import Course, Lesson
-from core.constants import ADMINS_GROUP, TEACHERS_GROUP, STUDENTS_GROUP
 from courses.permissions import IsAdminOrTeacher
+from users.models import CustomUser
 
 # --- Unit-тесты permission-класса ---
+
 
 class IsAdminOrTeacherPermissionTest(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         # Пользователи
-        self.admin = CustomUser.objects.create_user(email='admin@test.com', full_name='Admin', password='pass', is_staff=True)
-        self.teacher = CustomUser.objects.create_user(email='teacher@test.com', full_name='Teacher', password='pass')
-        self.student = CustomUser.objects.create_user(email='student@test.com', full_name='Student', password='pass')
+        self.admin = CustomUser.objects.create_user(
+            email="admin@test.com", full_name="Admin", password="pass", is_staff=True
+        )
+        self.teacher = CustomUser.objects.create_user(email="teacher@test.com", full_name="Teacher", password="pass")
+        self.student = CustomUser.objects.create_user(email="student@test.com", full_name="Student", password="pass")
 
-        # Создаём группы через constants
-        admin_group = Group.objects.create(name=ADMINS_GROUP)
+        # Создаём группы через constants (без присваивания переменных)
+        Group.objects.create(name=ADMINS_GROUP)
         teacher_group = Group.objects.create(name=TEACHERS_GROUP)
         student_group = Group.objects.create(name=STUDENTS_GROUP)
 
@@ -31,40 +34,45 @@ class IsAdminOrTeacherPermissionTest(TestCase):
         self.permission = IsAdminOrTeacher()
 
     def test_admin_has_permission(self):
-        request = self.factory.get('/')
+        request = self.factory.get("/")
         request.user = self.admin
         self.assertTrue(self.permission.has_permission(request, None))
 
     def test_teacher_has_permission(self):
-        request = self.factory.get('/')
+        request = self.factory.get("/")
         request.user = self.teacher
         self.assertTrue(self.permission.has_permission(request, None))
 
     def test_student_has_no_permission(self):
-        request = self.factory.get('/')
+        request = self.factory.get("/")
         request.user = self.student
         self.assertFalse(self.permission.has_permission(request, None))
 
     def test_anonymous_has_no_permission(self):
-        request = self.factory.get('/')
-        request.user = type('Anon', (), {'is_authenticated': False})()
+        request = self.factory.get("/")
+        request.user = type("Anon", (), {"is_authenticated": False})()
         self.assertFalse(self.permission.has_permission(request, None))
 
 
 # --- Базовые smoke-тесты (список, просмотр, запрет на создание для не-преподавателей) ---
 
+
 class CoursesTests(APITestCase):
     def setUp(self):
         call_command("init_groups", verbosity=0)
         self.user = CustomUser.objects.create_user(email="test@example.com", password="12345", full_name="Test User")
-        self.teacher = CustomUser.objects.create_user(email="teacher@example.com", password="12345", full_name="Teacher")
+        self.teacher = CustomUser.objects.create_user(
+            email="teacher@example.com", password="12345", full_name="Teacher"
+        )
         self.teacher.groups.add(Group.objects.get(name=TEACHERS_GROUP))
 
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
         self.course = Course.objects.create(title="Test Course", description="Test Desc", owner=self.teacher)
-        self.lesson = Lesson.objects.create(course=self.course, title="Lesson 1", content="Content", order=1, owner=self.teacher)
+        self.lesson = Lesson.objects.create(
+            course=self.course, title="Lesson 1", content="Content", order=1, owner=self.teacher
+        )
 
     def test_list_courses(self):
         response = self.client.get("/api/courses/")
@@ -84,14 +92,18 @@ class LessonsTests(APITestCase):
     def setUp(self):
         call_command("init_groups", verbosity=0)
         self.user = CustomUser.objects.create_user(email="student@example.com", password="12345", full_name="Student")
-        self.teacher = CustomUser.objects.create_user(email="teacher@example.com", password="12345", full_name="Teacher")
+        self.teacher = CustomUser.objects.create_user(
+            email="teacher@example.com", password="12345", full_name="Teacher"
+        )
         self.teacher.groups.add(Group.objects.get(name=TEACHERS_GROUP))
 
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
         self.course = Course.objects.create(title="Test Course", description="Test Desc", owner=self.teacher)
-        self.lesson = Lesson.objects.create(course=self.course, title="Lesson 1", content="Content", order=1, owner=self.teacher)
+        self.lesson = Lesson.objects.create(
+            course=self.course, title="Lesson 1", content="Content", order=1, owner=self.teacher
+        )
 
     def test_list_lessons(self):
         response = self.client.get("/api/lessons/")
@@ -102,17 +114,13 @@ class LessonsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_create_lesson_forbidden(self):
-        data = {
-            "title": "New Lesson",
-            "content": "Lesson content",
-            "order": 2,
-            "course": self.course.id
-        }
+        data = {"title": "New Lesson", "content": "Lesson content", "order": 2, "course": self.course.id}
         response = self.client.post("/api/lessons/", data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 # --- Дополнительные тесты прав на владение и редактирование ---
+
 
 class CoursePermissionsTestCase(APITestCase):
     def setUp(self):
@@ -132,9 +140,7 @@ class CoursePermissionsTestCase(APITestCase):
         self.student.groups.add(Group.objects.get(name=STUDENTS_GROUP))
 
         # Курс и урок
-        self.course = Course.objects.create(
-            title="Test Course", owner=self.teacher1, description="desc"
-        )
+        self.course = Course.objects.create(title="Test Course", owner=self.teacher1, description="desc")
         self.lesson = Lesson.objects.create(
             course=self.course, title="Test Lesson", content="...", order=1, owner=self.teacher1
         )

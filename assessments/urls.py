@@ -1,6 +1,7 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import AssessmentViewSet, QuestionViewSet, AnswerOptionViewSet, SubmitAnswerAPIView
+
+from .views import AnswerOptionViewSet, AssessmentViewSet, QuestionViewSet, SubmitAnswerAPIView
 
 router = DefaultRouter()
 router.register("assessments", AssessmentViewSet, basename="assessment")

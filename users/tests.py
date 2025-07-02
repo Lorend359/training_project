@@ -1,10 +1,11 @@
-from rest_framework.test import APITestCase
-from rest_framework import status
-from django.urls import reverse
-from users.models import CustomUser
+from django.contrib.auth.models import Group
 from django.core.management import call_command
-from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+
+from users.models import CustomUser
 
 
 class UserRegistrationTestCase(APITestCase):
@@ -14,11 +15,7 @@ class UserRegistrationTestCase(APITestCase):
         self.token_url = reverse("token_obtain_pair")
 
     def test_register_user_success(self):
-        data = {
-            "email": "testuser@example.com",
-            "full_name": "Test User",
-            "password": "securepassword123"
-        }
+        data = {"email": "testuser@example.com", "full_name": "Test User", "password": "securepassword123"}
         response = self.client.post(self.register_url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["email"], data["email"])
@@ -28,30 +25,22 @@ class UserRegistrationTestCase(APITestCase):
         data = {
             "email": "test2@example.com",
             # full_name is missing
-            "password": "12345678"
+            "password": "12345678",
         }
         response = self.client.post(self.register_url, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_get_token_success(self):
-        user = CustomUser.objects.create_user(
-            email="tokenuser@example.com",
-            full_name="Token User",
-            password="tokenpass123"
+        CustomUser.objects.create_user(
+            email="tokenuser@example.com", full_name="Token User", password="tokenpass123"
         )
-        response = self.client.post(self.token_url, {
-            "email": "tokenuser@example.com",
-            "password": "tokenpass123"
-        })
+        response = self.client.post(self.token_url, {"email": "tokenuser@example.com", "password": "tokenpass123"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("access", response.data)
         self.assertIn("refresh", response.data)
 
     def test_get_token_invalid_credentials(self):
-        response = self.client.post(self.token_url, {
-            "email": "nonexistent@example.com",
-            "password": "wrongpass"
-        })
+        response = self.client.post(self.token_url, {"email": "nonexistent@example.com", "password": "wrongpass"})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
@@ -67,7 +56,3 @@ class InitGroupsCommandTests(TestCase):
 
         self.assertGreater(teachers.permissions.count(), 0)
         self.assertGreater(students.permissions.count(), 0)
-
-
-
-

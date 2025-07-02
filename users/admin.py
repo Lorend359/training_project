@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+
 from .models import CustomUser
 
 
@@ -16,8 +17,11 @@ class CustomUserAdmin(BaseUserAdmin):
         ("Важные даты", {"fields": ("last_login",)}),
     )
     add_fieldsets = (
-        (None, {
-            "classes": ("wide",),
-            "fields": ("email", "full_name", "password1", "password2", "is_staff", "is_superuser")}
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("email", "full_name", "password1", "password2", "is_staff", "is_superuser"),
+            },
         ),
     )

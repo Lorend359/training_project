@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Assessment, Question, AnswerOption, UserAnswer
+
+from .models import AnswerOption, Assessment, Question, UserAnswer
 
 
 @admin.register(Assessment)

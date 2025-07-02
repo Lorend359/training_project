@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Assessment, Question, AnswerOption, UserAnswer
+
+from .models import AnswerOption, Assessment, Question, UserAnswer
 
 
 class AnswerOptionSerializer(serializers.ModelSerializer):
@@ -20,6 +21,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     Позволяет создать вопрос и сразу несколько вариантов ответов
     в рамках одного POST-запроса.
     """
+
     answer_options = AnswerOptionSerializer(many=True)
 
     class Meta:
@@ -42,6 +44,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
     Сериализатор оценки знаний (теста).
     Включает вложенные вопросы (только для чтения).
     """
+
     questions = QuestionSerializer(many=True, read_only=True)
 
     class Meta:
@@ -83,16 +86,13 @@ class UserAnswerSerializer(serializers.ModelSerializer):
 
         # Номер попытки = кол-во предыдущих + 1
         validated_data["attempt_number"] = (
-                UserAnswer.objects.filter(
-                    user=validated_data["user"],
-                    question=validated_data["question"]
-                ).count() + 1
+            UserAnswer.objects.filter(user=validated_data["user"], question=validated_data["question"]).count() + 1
         )
 
         return super().create(validated_data)
 
 
-
 # AssessmentSerializer включает все Question, а те в свою очередь — AnswerOption.
 #
-# Все вложенные поля только на чтение (пока) — мы не делаем массовое создание внутри, CRUD будет отдельно через ViewSet'ы.
+# Все вложенные поля только на чтение (пока) —
+# мы не делаем массовое создание внутри, CRUD будет отдельно через ViewSet'ы.

@@ -1,10 +1,10 @@
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 
 from .models import Course, Lesson
-from .serializers import CourseSerializer, LessonSerializer
 from .permissions import IsAdminOrTeacher, IsOwnerOrAdmin
+from .serializers import CourseSerializer, LessonSerializer
 
 
 @extend_schema(
@@ -17,7 +17,7 @@ from .permissions import IsAdminOrTeacher, IsOwnerOrAdmin
     responses={
         200: CourseSerializer,
         403: OpenApiResponse(description="Недостаточно прав"),
-    }
+    },
 )
 class CourseViewSet(viewsets.ModelViewSet):
     serializer_class = CourseSerializer
@@ -50,7 +50,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     responses={
         200: LessonSerializer,
         403: OpenApiResponse(description="Недостаточно прав"),
-    }
+    },
 )
 class LessonViewSet(viewsets.ModelViewSet):
     serializer_class = LessonSerializer

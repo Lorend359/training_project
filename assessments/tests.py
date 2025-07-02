@@ -1,31 +1,43 @@
-from rest_framework.test import APITestCase
-from django.test import TestCase, RequestFactory
-from django.urls import reverse
-from django.core.management import call_command
 from django.contrib.auth.models import Group
-from users.models import CustomUser
-from courses.models import Course, Lesson
-from assessments.models import Assessment, Question, AnswerOption, UserAnswer
-from assessments.permissions import IsCourseOwnerOrPrivileged
+from django.core.management import call_command
+from django.test import RequestFactory, TestCase
+from django.urls import reverse
+from rest_framework.test import APITestCase
+
 from assessments import services
-from core.constants import ADMINS_GROUP, TEACHERS_GROUP, STUDENTS_GROUP
+from assessments.models import AnswerOption, Assessment, Question
+from assessments.permissions import IsCourseOwnerOrPrivileged
+from core.constants import ADMINS_GROUP, TEACHERS_GROUP
+from courses.models import Course, Lesson
+from users.models import CustomUser
+from assessments.serializers import (
+    AnswerOptionSerializer,
+    AssessmentSerializer,
+    QuestionSerializer,
+    UserAnswerSerializer,
+)
 
 # --- 1. UNIT-ТЕСТЫ PERMISSIONS ---
+
 
 class IsCourseOwnerOrPrivilegedTest(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-        self.owner = CustomUser.objects.create_user(email='owner@test.com', full_name='Owner', password='pass')
-        self.admin = CustomUser.objects.create_user(email='admin@test.com', full_name='Admin', password='pass', is_staff=True)
-        self.teacher = CustomUser.objects.create_user(email='teacher@test.com', full_name='Teacher', password='pass')
+        self.owner = CustomUser.objects.create_user(email="owner@test.com", full_name="Owner", password="pass")
+        self.admin = CustomUser.objects.create_user(
+            email="admin@test.com", full_name="Admin", password="pass", is_staff=True
+        )
+        self.teacher = CustomUser.objects.create_user(email="teacher@test.com", full_name="Teacher", password="pass")
         Group.objects.create(name=TEACHERS_GROUP)
         Group.objects.create(name=ADMINS_GROUP)
         self.teacher.groups.add(Group.objects.get(name=TEACHERS_GROUP))
         self.admin.groups.add(Group.objects.get(name=ADMINS_GROUP))
-        self.other = CustomUser.objects.create_user(email='other@test.com', full_name='Other', password='pass')
+        self.other = CustomUser.objects.create_user(email="other@test.com", full_name="Other", password="pass")
 
         self.course = Course.objects.create(title="Course", owner=self.owner, description="...")
-        self.lesson = Lesson.objects.create(course=self.course, title="Lesson", content="...", order=1, owner=self.owner)
+        self.lesson = Lesson.objects.create(
+            course=self.course, title="Lesson", content="...", order=1, owner=self.owner
+        )
         self.assessment = Assessment.objects.create(lesson=self.lesson, title="Assessment")
         self.question = Question.objects.create(assessment=self.assessment, text="Q1")
         self.permission = IsCourseOwnerOrPrivileged()
@@ -77,6 +89,7 @@ class IsCourseOwnerOrPrivilegedTest(TestCase):
 
 # --- 2. UNIT-ТЕСТЫ SERVICES ---
 
+
 class ServicesTestCase(TestCase):
     def setUp(self):
         self.user = CustomUser.objects.create_user(email="u@x.com", password="p", full_name="U")
@@ -112,9 +125,6 @@ class ServicesTestCase(TestCase):
 
 # --- 3. UNIT-ТЕСТЫ SERIALIZERS ---
 
-from assessments.serializers import (
-    AssessmentSerializer, QuestionSerializer, AnswerOptionSerializer, UserAnswerSerializer
-)
 
 class AssessmentSerializerTest(TestCase):
     def setUp(self):
@@ -152,47 +162,24 @@ class AssessmentSerializerTest(TestCase):
 
 # --- 4. API-ТЕСТЫ ---
 
+
 class AssessmentTests(APITestCase):
     def setUp(self):
         call_command("init_groups", verbosity=0)
         self.teacher = CustomUser.objects.create_user(
-            email="teacher@example.com",
-            password="pass1234",
-            full_name="Teacher User"
+            email="teacher@example.com", password="pass1234", full_name="Teacher User"
         )
         self.teacher.groups.add(Group.objects.get(name="Преподаватели"))
         self.client.force_authenticate(user=self.teacher)
 
-        self.course = Course.objects.create(
-            title="Course 1",
-            description="Test course",
-            owner=self.teacher
-        )
+        self.course = Course.objects.create(title="Course 1", description="Test course", owner=self.teacher)
         self.lesson = Lesson.objects.create(
-            title="Lesson 1",
-            content="Lesson content",
-            course=self.course,
-            order=1,
-            owner=self.teacher
+            title="Lesson 1", content="Lesson content", course=self.course, order=1, owner=self.teacher
         )
-        self.assessment = Assessment.objects.create(
-            lesson=self.lesson,
-            title="Test 1"
-        )
-        self.question = Question.objects.create(
-            assessment=self.assessment,
-            text="What is 2 + 2?"
-        )
-        self.option_correct = AnswerOption.objects.create(
-            question=self.question,
-            text="4",
-            is_correct=True
-        )
-        self.option_wrong = AnswerOption.objects.create(
-            question=self.question,
-            text="3",
-            is_correct=False
-        )
+        self.assessment = Assessment.objects.create(lesson=self.lesson, title="Test 1")
+        self.question = Question.objects.create(assessment=self.assessment, text="What is 2 + 2?")
+        self.option_correct = AnswerOption.objects.create(question=self.question, text="4", is_correct=True)
+        self.option_wrong = AnswerOption.objects.create(question=self.question, text="3", is_correct=False)
 
     def test_assessment_detail_view(self):
         url = reverse("assessment-detail", args=[self.assessment.id])
@@ -202,10 +189,7 @@ class AssessmentTests(APITestCase):
 
     def test_submit_correct_answer(self):
         url = reverse("submit-answer")
-        data = {
-            "question": self.question.id,
-            "selected_option": self.option_correct.id
-        }
+        data = {"question": self.question.id, "selected_option": self.option_correct.id}
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, 201)
         self.assertTrue(response.data["is_correct"])
@@ -213,42 +197,24 @@ class AssessmentTests(APITestCase):
 
     def test_submit_wrong_answer_then_correct(self):
         url = reverse("submit-answer")
-        self.client.post(url, {
-            "question": self.question.id,
-            "selected_option": self.option_wrong.id
-        })
-        response = self.client.post(url, {
-            "question": self.question.id,
-            "selected_option": self.option_correct.id
-        })
+        self.client.post(url, {"question": self.question.id, "selected_option": self.option_wrong.id})
+        response = self.client.post(url, {"question": self.question.id, "selected_option": self.option_correct.id})
         self.assertEqual(response.status_code, 201)
         self.assertTrue(response.data["is_correct"])
         self.assertEqual(response.data["attempt_number"], 2)
 
     def test_submit_after_successful_answer_denied(self):
         url = reverse("submit-answer")
-        self.client.post(url, {
-            "question": self.question.id,
-            "selected_option": self.option_correct.id
-        })
-        response = self.client.post(url, {
-            "question": self.question.id,
-            "selected_option": self.option_wrong.id
-        })
+        self.client.post(url, {"question": self.question.id, "selected_option": self.option_correct.id})
+        response = self.client.post(url, {"question": self.question.id, "selected_option": self.option_wrong.id})
         self.assertEqual(response.status_code, 400)
         self.assertIn("уже правильно ответили", str(response.data).lower())
 
     def test_submit_more_than_three_attempts_denied(self):
         url = reverse("submit-answer")
         for _ in range(3):
-            self.client.post(url, {
-                "question": self.question.id,
-                "selected_option": self.option_wrong.id
-            })
-        response = self.client.post(url, {
-            "question": self.question.id,
-            "selected_option": self.option_wrong.id
-        })
+            self.client.post(url, {"question": self.question.id, "selected_option": self.option_wrong.id})
+        response = self.client.post(url, {"question": self.question.id, "selected_option": self.option_wrong.id})
         self.assertEqual(response.status_code, 400)
         self.assertIn("превышено количество попыток", str(response.data).lower())
 
@@ -289,4 +255,3 @@ class AssessmentNegativeTests(APITestCase):
         url = reverse("question-detail", args=[self.question.id])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, 403)
-

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from .models import Course, Lesson
 
 
@@ -25,6 +26,7 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ["id", "title", "description", "owner", "created_at", "lessons"]
         read_only_fields = ["owner", "created_at"]
+
 
 # CourseSerializer включает в себя вложенные уроки (lessons) для удобного отображения.
 # Сами уроки редактируются отдельно, но могут быть отображены при получении курса.

@@ -1,11 +1,10 @@
-from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.core.management.base import BaseCommand
 
+from assessments.models import AnswerOption, Assessment, Question, UserAnswer
+from core.constants import ADMINS_GROUP, STUDENTS_GROUP, TEACHERS_GROUP
 from courses.models import Course, Lesson
-from assessments.models import Assessment, Question, AnswerOption, UserAnswer
-from users.models import CustomUser
-from core.constants import ADMINS_GROUP, TEACHERS_GROUP, STUDENTS_GROUP
 
 
 class Command(BaseCommand):
