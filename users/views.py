@@ -1,9 +1,24 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+
 from .serializers import UserRegistrationSerializer
 
 
+@extend_schema(
+    tags=["Пользователи"],
+    summary="Регистрация пользователя",
+    description="Позволяет зарегистрировать нового пользователя. Возвращает email и ФИО при успешной регистрации.",
+    request=UserRegistrationSerializer,
+    responses={
+        201: OpenApiResponse(
+            response=None,
+            description="Успешная регистрация. Возвращает email и ФИО."
+        ),
+        400: OpenApiResponse(description="Ошибка валидации данных"),
+    }
+)
 class UserRegistrationView(APIView):
     """
     View для регистрации нового пользователя.

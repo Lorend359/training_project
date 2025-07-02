@@ -1,16 +1,23 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+
 from .models import Course, Lesson
 from .serializers import CourseSerializer, LessonSerializer
 from .permissions import IsAdminOrTeacher
 
 
+@extend_schema(
+    tags=["Курсы"],
+    summary="Управление курсами",
+    description="Позволяет создавать, просматривать, изменять и удалять курсы. "
+                "Просмотр — для всех авторизованных, управление — только для преподавателей и администраторов.",
+    responses={
+        200: CourseSerializer,
+        403: OpenApiResponse(description="Недостаточно прав"),
+    }
+)
 class CourseViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet для работы с курсами.
-    Только авторизованные пользователи могут просматривать.
-    Создавать, изменять и удалять — только админ или преподаватель.
-    """
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
@@ -23,12 +30,17 @@ class CourseViewSet(viewsets.ModelViewSet):
         serializer.save(owner=self.request.user)
 
 
+@extend_schema(
+    tags=["Уроки"],
+    summary="Управление уроками",
+    description="Позволяет создавать, просматривать, изменять и удалять уроки. "
+                "Просмотр — для всех авторизованных, управление — только для преподавателей и администраторов.",
+    responses={
+        200: LessonSerializer,
+        403: OpenApiResponse(description="Недостаточно прав"),
+    }
+)
 class LessonViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet для работы с уроками.
-    Только авторизованные пользователи могут просматривать.
-    Создавать, изменять и удалять — только админ или преподаватель.
-    """
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
 
@@ -39,9 +51,3 @@ class LessonViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
-
-
-
-# Используем ModelViewSet для быстрого создания CRUD-интерфейсов.
-# Курс создаётся от имени текущего пользователя через perform_create.
-# Все действия защищены: доступ только для авторизованных.

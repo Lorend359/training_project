@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "drf_spectacular",
     "corsheaders",
     "users",
     "courses",
@@ -146,17 +147,23 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Django REST Framework and drf-spectacular settings
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
 }
 
+
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Self Learning API',
-    'DESCRIPTION': 'Платформа самообучения',
-    'VERSION': '1.0.0',
+    "TITLE": "LMS API",
+    "DESCRIPTION": "Платформа самообучения с ролями и тестами.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
+
 
 
 # CORS settings
@@ -167,4 +174,5 @@ CORS_ALLOWED_ORIGINS = [
 
 
 AUTH_USER_MODEL = "users.CustomUser"
+
 
